@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.1
         with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
+          token: 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  # Use your GitHub token here
           submodules: recursive
           fetch-depth: 0
 
@@ -33,13 +33,13 @@ jobs:
             mv temp "$file"
           done
 
-      - name: Zip Changes
+      - name: Commit Changes
         run: |
+          git config --global user.name "${{ github.repository_owner }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
           git add .
-          git diff --staged --name-only | zip -@ modified_files.zip
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: modified_files
-          path: modified_files.zip
+          if git commit -m "Updated submodule references and applied unique modifications to .c, .theme, and .xml files" ; then
+            git push origin submodule-sync-${{ github.run_number }}
+          else
+            echo "No changes to commit"
+          fi
