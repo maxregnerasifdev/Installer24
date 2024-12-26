@@ -39,6 +39,7 @@ jobs:
           git config --global user.email "actions@github.com"
           git add .
           if git commit -m "Updated submodule references and applied unique modifications to .c, .theme, and .xml files" ; then
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
             git push origin submodule-sync-${{ github.run_number }}
           else
             echo "No changes to commit"
