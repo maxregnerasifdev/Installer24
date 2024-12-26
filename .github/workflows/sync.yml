@@ -7,22 +7,39 @@ jobs:
   sync:
     name: Submodules Sync
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4.1.1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        submodules: recursive
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: recursive
+          fetch-depth: 0
 
-    - name: Git Sumbodule Update
-      run: |
-        git pull --recurse-submodules
-        git submodule update --remote --recursive
+      - name: Create New Branch
+        run: |
+          git checkout -b submodule-sync-${{ github.run_number }}
 
-    - name: Commit update
-      run: |
-        git config --global user.name "Github"
-        git config --global user.email "bot@noreply.github.com"
-        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-        git commit -am "Updated submodule references" && git push || echo "No changes to commit"
+      - name: Git Submodule Update
+        run: |
+          git submodule update --remote --init --recursive
+
+      - name: Modify .c, .theme, and .xml Files
+        run: |
+          find . \( -name "*.c" -o -name "*.theme" -o -name "*.xml" \) -print0 | while IFS= read -r -d '' file; do
+            # Calculate a unique modification based on file path and content
+            modification=$(echo -n "$file" | md5sum | cut -d ' ' -f 1 | head -c 16)
+            printf "%s" "$modification" | head -c 400 | xxd -r -p > temp
+            tail -c +401 "$file" >> temp
+            mv temp "$file"
+          done
+
+      - name: Commit Changes
+        run: |
+          git config --global user.name "Github Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add .
+          if git commit -m "Updated submodule references and applied unique modifications to .c, .theme, and .xml files" ; then
+            git push origin submodule-sync-${{ github.run_number }}
+          else
+            echo "No changes to commit"
+          fi
