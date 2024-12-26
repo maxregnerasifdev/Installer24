@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.1
         with:
-          token: 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
+          token: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN
           submodules: recursive
           fetch-depth: 0
 
