@@ -15,10 +15,6 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Create New Branch
-        run: |
-          git checkout -b submodule-sync-${{ github.run_number }}
-
       - name: Git Submodule Update
         run: |
           git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
@@ -34,13 +30,11 @@ jobs:
             mv temp "$file"
           done
 
-      - name: Commit Changes
-        run: |
-          git config --global user.name "maxregnerasifdev" 
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          git add .
-          if git commit -m "Updated submodule references and applied unique modifications to .c, .theme, and .xml files" ; then
-            git push origin submodule-sync-${{ github.run_number }}
-          else
-            echo "No changes to commit"
-          fi
+      - name: Zip Source Code
+        run: zip -r modified_source_code.zip .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: modified_source_code
+          path: modified_source_code.zip
